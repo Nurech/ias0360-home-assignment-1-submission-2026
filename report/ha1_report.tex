@@ -1,0 +1,87 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Home Assignment 1: Motion Data Processing on a Raspberry Pi Pico W}, pdfauthor={Joosep Parts}}
+
+\begin{document}
+
+\title{Home Assignment 1: Motion Data Processing on a Raspberry Pi Pico W}
+
+\author{\IEEEauthorblockN{Joosep Parts (UNI-ID jopart, student code 256780IAXD)}
+\IEEEauthorblockA{IAS0360, Tallinn University of Technology, joosep.parts@taltech.ee}}
+
+\maketitle
+
+\section{What Was Done}
+A Raspberry Pi Pico~W reads a motion sensor. Its accelerometer measures acceleration in g along three
+directions (ax, ay, az); lying flat, gravity alone gives about 1\,g on az. Its gyroscope measures how
+fast the board turns (gx, gy, gz). The Pico takes 1024 readings in one second and then works on them:
+it subtracts each axis's average, scales each axis to a common range, sums each axis up in a few
+numbers (smallest, largest, average, middle, most common, spread), stores the values with fewer bits,
+counts how often each axis crosses zero, works out the tilt of the board, makes a slower copy with 250
+readings per second and runs a Fast Fourier Transform (FFT), which shows how fast the board moves
+back and forth. A PC repeats the FFT as a check. The board was recorded three
+times: lying still, shaken hard and rocked gently. The Pico took exactly 1000 readings per second
+every time; one reading took 378\,\textmu s.
+
+\section{Results}
+\textit{Pico versus PC.} Fig.~\ref{fig:fft}b shows the shaking: the Pico's FFT and the same FFT done on
+the PC lie on top of each other. They never differed by more than a hundred-thousandth of a g, and both
+found the same five strongest frequencies in every recording, so the Pico calculates correctly. The
+shaking was between 4 and 5 times a second (FFT 4.88\,Hz, zero crossings 4.4\,Hz), the rocking about twice a second (1.95 and 2.0\,Hz).
+
+\textit{Speed.} The Pico has no hardware for fractional numbers, so the FFT is slow: 73\,ms for 1024
+readings (Table~\ref{tab:fft}). If the FFT had to finish between two readings, the Pico could only
+take 13.6 readings per second. With a second buffer that keeps filling while the FFT runs, about 2225
+per second would work, so 1000 per second needs one. Working through one recording took about 5\,s, mostly the statistics (4.2 to 4.4\,s).
+
+\textit{Fewer bits.} Storing a value with fewer bits saves memory (one axis: 4096 bytes with 32 bits,
+512 with 4 bits if two share a byte), but the value gets rounded. The size of the rounding error
+compared with the signal is given in decibels (dB): a bigger number means a smaller error, and every
+bit less makes the error twice as big, about 6\,dB less. While shaking and rocking, every axis came
+within about 0.5\,dB of what theory predicts (rocking ay: about 96, 48 and 24\,dB with 16, 8 and 4
+bits). At rest, gy moved over only 16 sensor steps, which fell exactly on the stored levels, so with 16 and 8 bits it was almost not rounded (135\,dB instead of about 90 and 42).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_fft.pdf}
+\caption{Shaking recording. (a) Raw acceleration; dotted lines: the sensor's \textpm2\,g limit. (b) How strongly az contains each frequency, Pico and PC; dots: the Pico's five strongest.}
+\label{fig:fft}
+\end{figure}
+
+\begin{table}[!t]
+\caption{FFT time and fastest reading rate, mean of three recordings}
+\label{tab:fft}
+\centering
+\footnotesize
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+& & \multicolumn{2}{c}{Highest readings per second} \\
+\cmidrule(l){3-4}
+FFT size & Time (ms) & FFT between readings & With a second buffer \\
+\midrule
+128 & 7.0 & 135.6 & 2311 \\
+256 & 15.4 & 63.5 & 2283 \\
+512 & 33.6 & 29.4 & 2254 \\
+1024 & 73.2 & 13.6 & 2225 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textit{Summary numbers and tilt.} The summary numbers of all six axes take 168 bytes, 73 times less
+than the 12288 bytes of raw readings, and they are easy to read: lying still, az averaged 1.034\,g
+(gravity plus a small sensor error) and varied by only 1.4 thousandths of a g. The most common value only means something at rest: the same acceleration reading came up 20 to 24 times, while shaking at most 3. While rocking, the tilt worked out from gravity swung 32.6\textdegree,
+but the gyroscope measured less than 1\textdegree{} of turning: the board was mostly pushed sideways,
+and the accelerometer cannot tell a push from a tilt. Mixing in the gyroscope brought it down to
+4.6\textdegree.
+
+\section{Issues and Discussion}
+The shaking nearly reached the sensor's \textpm2\,g limit (az up to 1.98\,g), so harder movements need a
+larger range. The 250-per-second copy found the same five strongest frequencies (checked on the PC),
+and an FFT of its size takes the Pico only 15.4\,ms instead of 73.2\,ms. A quicker way of sorting the
+values would make the statistics much faster. At rest, the zero-crossing count took noise for a movement of 75 to 113 times a second; values near zero should not count.
+
+\end{document}

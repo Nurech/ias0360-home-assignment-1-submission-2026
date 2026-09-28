@@ -1,0 +1,92 @@
+HA1 OVERALL NUMBERS
+from still_run_log.txt, shake_run_log.txt, rock_run_log.txt, written by host.py
+every number in report/ha1_report.tex comes from this file
+
+SAMPLING                                         still     shake      rock
+  samples per second                           1000.00   1000.00   1000.00
+  late samples                                       0         0         0
+  sensor read, average (microseconds)            378.0     378.0     378.0
+  sensor read, longest (microseconds)              403       398       391
+  gyroscope offset, measured once at start-up (deg/s): x -2.16, y 0.19, z -0.51
+
+PICO FFT AGAINST NUMPY (ax, ay, az)              still     shake      rock
+  largest difference (millionths of a g)          0.09      1.65      1.11
+  largest difference (% of strongest value)     0.0142    0.0004    0.0007
+  same five strongest frequencies                  yes       yes       yes
+  same five from the 250 per second data           yes       yes       yes
+  strongest frequency ax (Hz)                    12.70      3.91      0.98
+  strongest frequency ay (Hz)                    12.70      3.91      1.95
+  strongest frequency az (Hz)                     9.77      3.91      1.95
+  strongest value ay (g)                         0.001     0.083     0.019
+  frequency step: 0.98 Hz (1000 samples per second / 1024 samples)
+
+ZERO CROSSINGS, ROUGH FREQUENCY (Hz)             still     shake      rock
+  ax                                              89.4       6.8       1.0
+  ay                                              87.9      17.1      21.5
+  az                                              70.8       3.4       6.8
+  gx                                              89.4       3.9       9.8
+  gy                                             106.0       3.4       1.5
+  gz                                              98.1       4.9       7.3
+
+TIME PER STEP (ms)                               still     shake      rock   average
+  record                                        1024.4    1024.4    1024.4    1024.4
+  convert                                          6.5       6.6       6.6       6.6
+  dc_offset                                       12.4      11.4      11.7      11.8
+  normalise                                       61.9      59.1      59.7      60.2
+  stats                                         4220.7    4294.7    4398.2    4304.5
+  quantization                                   243.1     245.2     245.0     244.4
+  zcr                                              5.3       5.3       5.3       5.3
+  orientation                                     25.3      24.9      25.0      25.1
+  downsample                                       4.8       4.8       4.8       4.8
+  fft_3_axes                                     217.3     217.9     218.1     217.8
+  processing, without recording (s)               4.80      4.87      4.97      4.88
+  statistics, share of processing (%)               88        88        88        88
+
+FFT TIMING, AVERAGE OF THE RECORDINGS          time ms   between    buffer
+  between: highest samples per second if the FFT must fit between two samples
+  buffer: highest samples per second with a second buffer
+  FFT size 128                                     7.0     135.5      2311
+  FFT size 256                                    15.4      63.5      2283
+  FFT size 512                                    33.6      29.4      2254
+  FFT size 1024                                   73.2      13.6      2224
+
+QUANTIZATION (signal-to-noise ratio, dB)         still     shake      rock
+  largest measured - expected difference          2.48      0.60      0.38
+
+  rock ay                                       16 bit     8 bit     4 bit
+  measured                                       91.60     43.70     19.53
+  expected for this signal                       91.65     43.48     19.40
+
+  memory per axis: 32-bit 4096 B, 16-bit 2048 B, 8-bit 1024 B, 4-bit 1024 B as stored (512 B two per byte)
+
+SENSOR STEPS EACH AXIS SPANS (raw counts)        still     shake      rock
+  ax                                               189     30166     11591
+  ay                                               164     10368      1970
+  az                                               160     35931      7266
+  gx                                                17     11708      1566
+  gy                                                15     46598     14618
+  gz                                                15     11799      1579
+
+STATISTICS                                       still     shake      rock
+  size: 7 numbers x 6 axes x 4 bytes = 168 B, against 1024 x 6 x 2 = 12288 B of raw values (73 times smaller)
+  az average (g)                                 1.041     1.101     1.021
+  az spread (thousandths of a g)                   1.6     456.8     113.2
+  az smallest (g)                                1.036    -0.255     0.764
+  az largest (g)                                 1.046     1.938     1.208
+  az samples at the 2 g limit                        0         0         0
+  most common value of ax, times                    24         3         3
+  most common value of ay, times                    25         3         5
+  most common value of az, times                    22         2         4
+  most common value of gx, times                   146         3         6
+  most common value of gy, times                   179         4         3
+  most common value of gz, times                   130         3         7
+
+TILT (degrees, largest minus smallest)           still     shake      rock
+  roll from gravity                                0.6     196.9       7.4
+  roll, complementary filter                       0.6      14.5       2.1
+  pitch from gravity                               0.6     122.9      40.9
+  pitch, complementary filter                      0.1      78.1      52.7
+  yaw from the gyroscope                           0.5      25.2       3.7
+  gyroscope turning gx, offset removed            1.56     14.13      2.19
+  gyroscope turning gy, offset removed            0.17     74.33     53.67
+  gyroscope turning gz, offset removed            0.48     25.19      3.68

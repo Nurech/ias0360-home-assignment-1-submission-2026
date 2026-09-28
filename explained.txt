@@ -1,0 +1,16 @@
+HA1 in short (Joosep Parts, 256780IAXD). ./run.sh builds, flashes, then records the board still, shaken and gently rocked, with a 5 s countdown before each, and analyses the three recordings.
+
+1. The Pico reads the motion sensor 1000 times a second for about one second: acceleration (ax, ay, az, gravity included) and turning speed (gx, gy, gz). record_window()
+2. It subtracts each axis's average, so gravity and sensor offsets do not hide the movement. remove_dc_offset()
+3. It rescales each axis to -1..+1 and to "average 0, spread 1", so axes can be compared. normalise_min_max(), normalise_z_score()
+4. It sums up each axis in a few numbers: smallest, largest, average, middle value, most common value, spread. compute_axis_stats()
+5. It stores the values with 16, 8 and 4 bits instead of 32 to save memory (a 4-bit value still takes a whole byte, C has no 4-bit type), and measures the rounding error this adds: every bit less makes the error about 2 times bigger. run_quantization()
+6. It counts how often each axis crosses zero, a quick guess of how fast the board goes back and forth. zero_crossings()
+7. It estimates the tilt of the board from the direction of gravity and smooths it with the gyroscope. compute_orientation()
+8. It averages every 4 samples into one, giving 250 samples a second. downsample()
+9. It runs an FFT (Fast Fourier Transform) on the full 1000-per-second data, which shows which frequencies (shakes per second) are in the movement, and lists the 5 strongest. fft_amplitude(), top_peaks()
+10. It times every step, then prints the raw values and all results over USB. host.py on the PC saves them, redoes the FFT with NumPy as a check and draws the plots.
+The big arrays are global because the Pico's stack, where local variables live, is only 2 KB.
+The measured results (sampling rate, the FFT check against the PC, how fast the shaking was) are in report/ha1_report.pdf.
+The slowest step is the statistics (about 4 s): finding the middle value sorts the data slowly, and the most common value compares every value with every other one.
+The recordings, plots and overall_data.txt (every number the report uses) are in output/, named still_, shake_ and rock_; report/build.sh draws the report's figure from shake_run_log.txt and builds report/ha1_report.pdf.
